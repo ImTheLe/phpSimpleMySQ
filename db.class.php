@@ -52,7 +52,7 @@ class DB{
 		$where = $this->conditionParse($condition);
 		
 		$query = "SELECT " . $column . " FROM " . $this->prefix . $table;
-		if(isset($where)) $query .= " WHERE " . $where;
+		if($where) $query .= " WHERE " . $where;
 		if($order) $query .= " ORDER BY " . $order;
 		if($limit) $query .= " LIMIT " . $limit;
 		
@@ -65,20 +65,20 @@ class DB{
 		if($error[2]){
 			$response['error']['code'] = $error[0];
 			$response['error']['message'] = $error[2];
-			$response['rows'] = 0;
+			$response['count'] = 0;
 		}else{
-			$response['rows'] = $result->rowCount();
-			$response['result'] = [];
+			$response['count'] = $result->rowCount();
+			$response['rows'] = [];
 			if($result->rowCount()==1 && !$addkey){
-				$response['result'] = $result->fetch(PDO::FETCH_ASSOC);
+				$response['rows'] = $result->fetch(PDO::FETCH_ASSOC);
 			}else if($result->rowCount()==1 && $addkey){
-				$response['result'][0] = $result->fetch(PDO::FETCH_ASSOC);
+				$response['rows'][0] = $result->fetch(PDO::FETCH_ASSOC);
 			}else if($result->rowCount()>1){
 				$id = 0;
-				while($response['result'][$id] = $result->fetch(PDO::FETCH_ASSOC)){
+				while($response['rows'][$id] = $result->fetch(PDO::FETCH_ASSOC)){
 					$id++;
 				}
-				unset($response['result'][$id]);
+				unset($response['rows'][$id]);
 			}
 		}
 		
@@ -123,12 +123,12 @@ class DB{
 		if($error[2]){
 			$response['error']['code'] = $error[0];
 			$response['error']['message'] = $error[2];
-			$response['rows'] = 0;
+			$response['count'] = 0;
 			$response['success'] = false;
 		}else{
-			$response['rows'] = $result->rowCount();
+			$response['count'] = $result->rowCount();
 			$response['id'] = $this->db->lastInsertId();
-			$response['success'] = count($values) == $response['rows'];
+			$response['success'] = count($values) == $response['count'];
 		}
 		
 		return $response;
@@ -137,29 +137,29 @@ class DB{
 	function dataUpdate($table, $data, $condition, $limit = 0){
 		$set = '';
 		foreach($data as $key => $value){
-			$set .= ($set ? ', ' : '') . $key . '=' . $thie->db->quote($value);
+			$set .= ($set ? ', ' : '') . $key . '=' . $this->db->quote($value);
 		}
 		
 		$where = $this->conditionParse($condition);
 		
-		$query = "UPDATE " . $thie->prefix . $table . " SET " . $set;
-		if(isset($where)) $query .= " WHERE " . $where;
+		$query = "UPDATE " . $this->prefix . $table . " SET " . $set;
+		if($where) $query .= " WHERE " . $where;
 		if($limit) $query .= " LIMIT " . $limit;
 		
 		$response = [];
 		
 		$response['query'] = $query;
 		
-		$result = $thie->db->query($query);
-		$error = $thie->db->errorInfo();
+		$result = $this->db->query($query);
+		$error = $this->db->errorInfo();
 		
 		if($error[2]){
 			$response['error']['code'] = $error[0];
 			$response['error']['message'] = $error[2];
-			$response['rows'] = 0;
+			$response['count'] = 0;
 			$response['success'] = false;
 		}else{
-			$response['rows'] = $result->rowCount();
+			$response['count'] = $result->rowCount();
 			$response['success'] = true;
 		}
 		
@@ -169,7 +169,7 @@ class DB{
 	function dataDelete($table, $condition, $limit = 0){
 		$where = $this->conditionParse($condition);
 		
-		$query = "DELETE FROM " . $thie->prefix . $table;
+		$query = "DELETE FROM " . $this->prefix . $table;
 		if($where) $query .= " WHERE " . $where;
 		if($limit) $query .= " LIMIT " . $limit;
 		
@@ -177,16 +177,16 @@ class DB{
 		
 		$response['query'] = $query;
 		
-		$result = $thie->db->query($query);
-		$error = $thie->db->errorInfo();
+		$result = $this->db->query($query);
+		$error = $this->db->errorInfo();
 		
 		if($error[2]){
 			$response['error']['code'] = $error[0];
 			$response['error']['message'] = $error[2];
-			$response['rows'] = 0;
+			$response['count'] = 0;
 			$response['success'] = false;
 		}else{
-			$response['rows'] = $result->rowCount();
+			$response['count'] = $result->rowCount();
 			$response['success'] = true;
 		}
 		
