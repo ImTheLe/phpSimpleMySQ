@@ -1,8 +1,8 @@
 <?php
+// phpSimpleMySQL v1.2 by ImTheLe, MIT License
 
 class DB{
-	var $db;
-	var $prefix;
+	private $db, $private;
 	
 	function __construct($host, $dbname, $user, $pass, $port = 3306){
 		if(!$user) $user = '';
@@ -21,23 +21,23 @@ class DB{
 		$this->db = null;
 	}
 	
-	function charset($charset){
+	public function charset($charset){
 		$this->db->exec('SET CHARACTER SET ' . $charset);
 	}
 	
-	function prefix($prefix){
+	public function prefix($prefix){
 		$this->prefix = $prefix;
 	}
 	
-	function conditionParse($condition){
+	private function conditionsParse($conditions){
 		$where = '';
-		if($condition){
-			if(is_array($condition)){
-				foreach($condition as $key => $value){
+		if($conditions){
+			if(is_array($conditions)){
+				foreach($conditions as $key => $value){
 					$where .= ($where ? ' AND ' : '') . $key . '=' . $this->db->quote($value);
 				}
 			}else{
-				$part = explode('\'', $condition);
+				$part = explode('\'', $conditions);
 				$num = 1;
 				foreach($part as $value){
 					$where .= ($num%2 ? $value : $this->db->quote($value));
@@ -48,13 +48,16 @@ class DB{
 		return $where;
 	}
 	
-	function dataGet($table, $column, $condition, $limit = 0, $order = '', $addkey = false){
-		$where = $this->conditionParse($condition);
+	public function dataGet($table, $columns, $conditions, $additional = []){
+		$where = $this->conditionsParse($conditions);
 		
-		$query = "SELECT " . $column . " FROM " . $this->prefix . $table;
+		$query = "SELECT " . $columns . " FROM " . $this->prefix . $table;
 		if($where) $query .= " WHERE " . $where;
-		if($order) $query .= " ORDER BY " . $order;
-		if($limit) $query .= " LIMIT " . $limit;
+		if(isset($additional['order']) && $additional['order']) $query .= " ORDER BY " . $additional['order'];
+		if(isset($additional['limit']) && $additional['limit']){
+			$query .= " LIMIT " . $additional['limit'];
+			if(isset($additional['offset']) && $additional['offset']) $query .= " OFFSET " . $additional['offset'];
+		}
 		
 		$response = [];
 		$response['query'] = $query;
@@ -63,15 +66,17 @@ class DB{
 		$error = $this->db->errorInfo();
 		
 		if($error[2]){
+			$response['success'] = false;
 			$response['error']['code'] = $error[0];
 			$response['error']['message'] = $error[2];
 			$response['count'] = 0;
 		}else{
+			$response['success'] = true;
 			$response['count'] = $result->rowCount();
 			$response['rows'] = [];
-			if($result->rowCount()==1 && !$addkey){
+			if($result->rowCount()==1 && (!isset($additional['single_key']) || !$additional['single_key'])){
 				$response['rows'] = $result->fetch(PDO::FETCH_ASSOC);
-			}else if($result->rowCount()==1 && $addkey){
+			}else if($result->rowCount()==1 && isset($additional['single_key']) && $additional['single_key']){
 				$response['rows'][0] = $result->fetch(PDO::FETCH_ASSOC);
 			}else if($result->rowCount()>1){
 				$id = 0;
@@ -85,11 +90,11 @@ class DB{
 		return $response;
 	}
 
-	function dataInsert($table, $data, $stackvalues = false){
+	public function dataInsert($table, $data, $additional = []){
 		$keys = '';
 		foreach($data as $key => $value){
 			if(is_array($value)){
-				if($stackvalues){
+				if(isset($additional['stacked_values']) && $additional['stacked_values']){
 					foreach($value as $subkey => $subvalue){
 						$values[$subkey][$key] = $this->db->quote($subvalue);
 					}
@@ -121,30 +126,30 @@ class DB{
 		$error = $this->db->errorInfo();
 		
 		if($error[2]){
+			$response['success'] = false;
 			$response['error']['code'] = $error[0];
 			$response['error']['message'] = $error[2];
 			$response['count'] = 0;
-			$response['success'] = false;
 		}else{
+			$response['success'] = count($values) == $response['count'];
 			$response['count'] = $result->rowCount();
 			$response['id'] = $this->db->lastInsertId();
-			$response['success'] = count($values) == $response['count'];
 		}
 		
 		return $response;
 	}
 	
-	function dataUpdate($table, $data, $condition, $limit = 0){
+	public function dataUpdate($table, $data, $conditions, $additional = []){
 		$set = '';
 		foreach($data as $key => $value){
 			$set .= ($set ? ', ' : '') . $key . '=' . $this->db->quote($value);
 		}
 		
-		$where = $this->conditionParse($condition);
+		$where = $this->conditionsParse($conditions);
 		
 		$query = "UPDATE " . $this->prefix . $table . " SET " . $set;
 		if($where) $query .= " WHERE " . $where;
-		if($limit) $query .= " LIMIT " . $limit;
+		if(isset($additional['limit']) && $additional['limit']) $query .= " LIMIT " . $additional['limit'];
 		
 		$response = [];
 		
@@ -154,24 +159,24 @@ class DB{
 		$error = $this->db->errorInfo();
 		
 		if($error[2]){
+			$response['success'] = false;
 			$response['error']['code'] = $error[0];
 			$response['error']['message'] = $error[2];
 			$response['count'] = 0;
-			$response['success'] = false;
 		}else{
-			$response['count'] = $result->rowCount();
 			$response['success'] = true;
+			$response['count'] = $result->rowCount();
 		}
 		
 		return $response;
 	}
 
-	function dataDelete($table, $condition, $limit = 0){
-		$where = $this->conditionParse($condition);
+	public function dataDelete($table, $conditions, $additional = []){
+		$where = $this->conditionsParse($conditions);
 		
 		$query = "DELETE FROM " . $this->prefix . $table;
 		if($where) $query .= " WHERE " . $where;
-		if($limit) $query .= " LIMIT " . $limit;
+		if(isset($additional['limit']) && $additional['limit']) $query .= " LIMIT " . $additional['limit'];
 		
 		$response = [];
 		
@@ -181,13 +186,13 @@ class DB{
 		$error = $this->db->errorInfo();
 		
 		if($error[2]){
+			$response['success'] = false;
 			$response['error']['code'] = $error[0];
 			$response['error']['message'] = $error[2];
 			$response['count'] = 0;
-			$response['success'] = false;
 		}else{
-			$response['count'] = $result->rowCount();
 			$response['success'] = true;
+			$response['count'] = $result->rowCount();
 		}
 		
 		return $response;
