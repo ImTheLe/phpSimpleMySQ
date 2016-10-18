@@ -99,7 +99,7 @@ Parameter formats
 Output
 ---------------------
 The four [Data methods](#data-methods) return an array that consists of the following elements:
-> ```'query'``` the query sent to the server
+> ```query``` the query sent to the server
 > 
 > ```success``` a boolean expressing the result of the query
 > 
