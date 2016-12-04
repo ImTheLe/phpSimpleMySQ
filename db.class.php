@@ -131,7 +131,7 @@ class DB{
 			$response['error']['message'] = $error[2];
 			$response['count'] = 0;
 		}else{
-			$response['success'] = count($values) == $response['count'];
+			$response['success'] = count($values) == $result->rowCount();
 			$response['count'] = $result->rowCount();
 			$response['id'] = $this->db->lastInsertId();
 		}
