@@ -44,7 +44,7 @@ Data methods
 > >
 > > ```'order'``` is a string specifying the rule the results will be soreted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
 > >
-> > ```'single_key'``` if true and in case there is only one row returned, the single row will be inside an array with the index of 0; if not set, it defaults to false
+> > ```'single_no_key'``` if true and in case there is only one row returned, the single row will not be inside an array with the index of 0; if not set, it defaults to false
 
 #### ```dataInsert($table_name, $data, $additional)```
 > ```$table_name``` is a string containing the name of the table we're inserting data in. Notice: the prefix will be prepended to the table name if specified
