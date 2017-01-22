@@ -74,9 +74,9 @@ class DB{
 			$response['success'] = true;
 			$response['count'] = $result->rowCount();
 			$response['rows'] = [];
-			if($result->rowCount()==1 && (!isset($additional['single_key']) || !$additional['single_key'])){
+			if($result->rowCount()==1 && isset($additional['single_no_key']) && $additional['single_no_key']){
 				$response['rows'] = $result->fetch(PDO::FETCH_ASSOC);
-			}else if($result->rowCount()==1 && isset($additional['single_key']) && $additional['single_key']){
+			}else if($result->rowCount()==1 && (!isset($additional['single_no_key']) || !$additional['single_no_key'])){
 				$response['rows'][0] = $result->fetch(PDO::FETCH_ASSOC);
 			}else if($result->rowCount()>1){
 				$id = 0;
