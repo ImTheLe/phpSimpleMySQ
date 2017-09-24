@@ -28,10 +28,10 @@ $database = new \Le\DB($options);
 `$conditions` specifies the conditions used to search for the rows, refer to the [Conditions format](#conditions-format) section for more info
 
 `$additional:` an array that contains all additions to the query; can contain the following keys:
-- `'limit'` is an integer that represents how many rows should be fetched; if set to `0` or not defined, there will be no limit
-- `'offset'` defines how many rows to skip in the result; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
-- `'order'` is a string specifying the rule the results will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
-- `'single_no_key'` if true and accompanied with `'limit'` set to 1, the single row will not be inside an array with the index of 0; if not set, it defaults to false
+-   `'limit'` is an integer that represents how many rows should be fetched; if set to `0` or not defined, there will be no limit
+-   `'offset'` defines how many rows to skip in the result; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
+-   `'order'` is a string specifying the rule the results will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
+-   `'single_no_key'` if true and accompanied with `'limit'` set to 1, the single row will not be inside an array with the index of 0; if not set, it defaults to false
 
 ### `dataInsert($table_name, $data, $additional)`
 `$table_name` is a string containing the name of the table we're inserting data in. Notice: the prefix will be prepended to the table name if specified
@@ -39,7 +39,7 @@ $database = new \Le\DB($options);
 `$data` can be an array or a string containing the rows to insert into the table, refer to the [Insert Data format](#insert-data-format) section for more info
 
 `$additional:` an array that contains all additions to the query; can contain the following keys:
-- `'stacked_values'` is also explained in the [Insert Data format](#insert-data-format) section
+-   `'stacked_values'` is also explained in the [Insert Data format](#insert-data-format) section
 
 ### `dataUpdate($table_name, $data, $conditions, $additional)`
 `$table_name` is a string containing the name of the table we're updating the data in. Notice: the prefix will be prepended to the table name if specified
@@ -49,9 +49,9 @@ $database = new \Le\DB($options);
 `$conditions` specifies the conditions used to search for the rows, refer to the [Conditions format](#conditions-format) section for more info
 
 `$additional:` an array that contains all additions to the query; can contain the following keys:
-- `'limit'` is an integer that represents how many rows should be updated; if set to `0` or not defined, there will be no limit
-- `'offset'` defines how many rows to skip in the query; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
-- `'order'` is a string specifying the rule the results will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
+-   `'limit'` is an integer that represents how many rows should be updated; if set to `0` or not defined, there will be no limit
+-   `'offset'` defines how many rows to skip in the query; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
+-   `'order'` is a string specifying the rule the results will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
 
 ### `dataDelete($table_name, $conditions, $additional)`
 `$table_name` is a string containing the name of the table we're deleting data from. Notice: the prefix will be prepended to the table name if specified
@@ -59,9 +59,9 @@ $database = new \Le\DB($options);
 `$conditions` specifies the conditions used to search for the rows, refer to the [Conditions format](#conditions-format) section for more info
 
 `$additional:` an array that contains all additions to the query; can contain the following keys:
-- `'limit'` is an integer that represents how many rows should be deleted; if set to `0` or not defined, there will be no limit
-- `'offset'` defines how many rows to skip in the query; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
-- `'order'` is a string specifying the rule the results will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
+-   `'limit'` is an integer that represents how many rows should be deleted; if set to `0` or not defined, there will be no limit
+-   `'offset'` defines how many rows to skip in the query; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
+-   `'order'` is a string specifying the rule the results will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
 
 ### `escape($data)`
 It returns a string escaped with single quotes (`'`) and ready for passing into the `$conditions` parameter.
@@ -93,12 +93,12 @@ Notice: if you are using the last format type, the `'stacked_values'` element of
 
 ## Output
 The [Methods](#methods) return an array that consists of the following elements:
-- `query` the query sent to the server
-- `success` a boolean stating if the result was successful
-- `error` defined in case of an error; has three elements: `code`, `message` and `trace`
-- `count` the number of the rows affected by the query
-- `id` row ID of the last inserted row; only for the `dataInsert()` method
-- `data` is an array of rows returned by the query for `dataGet()` method; if `'single_no_key'` was used, there is no nesting
+-   `query` the query sent to the server
+-   `success` a boolean stating if the result was successful
+-   `error` defined in case of an error; has three elements: `code`, `message` and `trace`
+-   `count` the number of the rows affected by the query
+-   `id` row ID of the last inserted row; only for the `dataInsert()` method
+-   `data` is an array of rows returned by the query for `dataGet()` method; if `'single_no_key'` was used, there is no nesting
 
 ## Example
 ```php
