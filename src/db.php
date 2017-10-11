@@ -1,5 +1,5 @@
 <?php
-// phpSimpleMySQL v2.4.0 by ImTheLe, MIT License
+// php-db-pdo-mysql by Leon, MIT License
 
 namespace Le;
 
