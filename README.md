@@ -12,9 +12,9 @@ require_once('db.class.php');
 Now you can initialize a DB object and start working with your database like following:
 ```php
 $options = [
-  'host': 'localhost', 'port': 3306, 'charset': 'utf8',
-  'database': 'db', 'prefix': 'prefix_',
-  'user': '', 'password': ''
+  'host' => 'localhost', 'port' => 3306, 'charset' => 'utf8',
+  'database' => 'db', 'prefix' => 'prefix_',
+  'user': '' => 'password': ''
 ];
 $database = new \Le\DB($options);
 ```
