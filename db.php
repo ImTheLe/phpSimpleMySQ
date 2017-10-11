@@ -21,7 +21,7 @@ class DB{
 		try{
 			$this->db = new \PDO('mysql:host=' . $options['host'] . ';port=' . $options['port'] . ';dbname=' . $options['database'], $options['user'], $options['password']);
 		}catch(\PDOException $error){
-			throw new Exception(json_encode(['error' => ['code' => $error->getCode(), 'desc' => $error->getMessage(), 'trace' => debug_backtrace()]]));
+			throw new \Exception(json_encode(['error' => ['code' => $error->getCode(), 'desc' => $error->getMessage(), 'trace' => debug_backtrace()]]));
 		}
 
 		$this->prefix = isset($options['prefix']) ? $options['prefix'] : '';
