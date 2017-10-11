@@ -1,14 +1,23 @@
-# phpSimpleMySQL
+# php-db-pdo-mysql
 Makes MySQL in PHP as easy as four methods and keeps it secure.
 
 All values sent through the four data methods are automatically escaped which protects your project from SQL Injection attacks.
 
 ## Getting started
-In your PHP script, load the Class file at the beginning of the code:
+### Using Composer
+Just install `php-db-pdo-mysql` using
+```
+php composer.phar require leongrdic/db-pdo-mysql
+```
+The class will autoload.
+
+### Not using Composer
+You can simply require the `db.php` file from the `src/` folder at the beginning of your script:
 ```php
-require_once('db.class.php');
+require_once('db.php');
 ```
 
+### Initialization
 Now you can initialize a DB object and start working with your database like following:
 ```php
 $options = [
