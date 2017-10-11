@@ -1,0 +1,17 @@
+{
+    "name": "leongrdic/db-pdo-mysql",
+    "type": "library",
+    "description": "Wraps around PDO's MySQL and makes database management simple",
+    "keywords": ["mysql","pdo","db"],
+    "homepage": "https://github.com/leongrdic/php-db-pdo-mysql",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Leon Grdic",
+            "email": "leongrdic@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.0"
+   }
+}
