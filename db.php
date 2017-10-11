@@ -19,8 +19,8 @@ class DB{
 		$options = array_replace_recursive($options, $argoptions);
 
 		try{
-			$this->db = new PDO('mysql:host=' . $options['host'] . ';port=' . $options['port'] . ';dbname=' . $options['database'], $options['user'], $options['password']);
-		}catch(PDOException $error){
+			$this->db = new \PDO('mysql:host=' . $options['host'] . ';port=' . $options['port'] . ';dbname=' . $options['database'], $options['user'], $options['password']);
+		}catch(\PDOException $error){
 			throw new Exception(json_encode(['error' => ['code' => $error->getCode(), 'desc' => $error->getMessage(), 'trace' => debug_backtrace()]]));
 		}
 
@@ -71,12 +71,12 @@ class DB{
 		$data = [];
 		if($result->rowCount()==1){
 			if(isset($additional['limit']) && $additional['limit'] == 1 && isset($additional['single_no_key']) && $additional['single_no_key'])
-				$data = $result->fetch(PDO::FETCH_ASSOC);
+				$data = $result->fetch(\PDO::FETCH_ASSOC);
 			else
-				$data[0] = $result->fetch(PDO::FETCH_ASSOC);
+				$data[0] = $result->fetch(\PDO::FETCH_ASSOC);
 		}else if($result->rowCount()>1){
 			$id = 0;
-			while($data[$id] = $result->fetch(PDO::FETCH_ASSOC)) $id++;
+			while($data[$id] = $result->fetch(\PDO::FETCH_ASSOC)) $id++;
 			unset($data[$id]);
 		}
 
