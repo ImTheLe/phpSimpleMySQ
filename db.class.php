@@ -1,5 +1,5 @@
 <?php
-// phpSimpleMySQL v2.3 by ImTheLe, MIT License
+// phpSimpleMySQL v2.4.0 by ImTheLe, MIT License
 
 namespace Le;
 
