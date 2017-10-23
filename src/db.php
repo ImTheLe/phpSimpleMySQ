@@ -50,9 +50,9 @@ class DB{
 
 		if(isset($options['conditions']) && !empty($options['conditions'])) $query .= ' WHERE ' . $options['conditions'];
 		if(isset($additional['order']) && $additional['order']) $query .= ' ORDER BY ' . $additional['order'];
-		if(isset($additional['limit']) && $additional['limit']){
+		if(isset($additional['limit']) && is_numeric($additional['limit']) && $additional['limit']>0){
 			$query .= ' LIMIT ' . $additional['limit'];
-			if(isset($additional['offset']) && $additional['offset']) $query .= ' OFFSET ' . $additional['offset'];
+			if(isset($additional['offset']) && is_numeric($additional['offset']) && $additional['offset']>0) $query .= ' OFFSET ' . $additional['offset'];
 		}
 
 		return $query;
