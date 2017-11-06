@@ -64,7 +64,11 @@ class DB{
 
 	public function dataGet($table, $columns = '*', $conditions = [], $additional = []){
 		$query = $this->buildQuery('get', $table, ['columns' => $columns, 'conditions' => $this->conditionsParse($conditions)], $additional);
-		$result = $this->db->query($query);
+		try{
+			$result = $this->db->query($query);
+		}catch(\PDOException $error){
+			return $this->error([$error->getCode(), '', $error->getMessage()], $query);
+		}
 		$error = $this->db->errorInfo();
 		if($error[1]) return $this->error($error, $query);
 
@@ -112,7 +116,11 @@ class DB{
 			$query .= ($num++ ? ', ' : '') . "($qv)";
 		}
 
-		$result = $this->db->query($query);
+		try{
+			$result = $this->db->query($query);
+		}catch(\PDOException $error){
+			return $this->error([$error->getCode(), '', $error->getMessage()], $query);
+		}
 		$error = $this->db->errorInfo();
 		if($error[1]) return $this->error($error, $query);
 
@@ -126,7 +134,11 @@ class DB{
 		}
 
 		$query = $this->buildQuery('update', $table, ['data' => $set, 'conditions' => $this->conditionsParse($conditions)], $additional);
-		$result = $this->db->query($query);
+		try{
+			$result = $this->db->query($query);
+		}catch(\PDOException $error){
+			return $this->error([$error->getCode(), '', $error->getMessage()], $query);
+		}
 		$error = $this->db->errorInfo();
 		if($error[1]) return $this->error($error, $query);
 
@@ -135,12 +147,14 @@ class DB{
 
 	public function dataDelete($table, $conditions = [], $additional = []){
 		$query = $this->buildQuery('delete', $table, ['conditions' => $this->conditionsParse($conditions)], $additional);
-		$result = $this->db->query($query);
+		try{
+			$result = $this->db->query($query);
+		}catch(\PDOException $error){
+			return $this->error([$error->getCode(), '', $error->getMessage()], $query);
+		}
 		$error = $this->db->errorInfo();
 		if($error[1]) return $this->error($error, $query);
 
 		return $this->output(true, $query, $result->rowCount());
 	}
 }
-
-?>
