@@ -1,6 +1,8 @@
 # php-db-pdo-mysql
 Makes MySQL in PHP as easy as four methods and keeps it secure.
 
+*Notice: out of date since v3.0.0*
+
 All values sent through the four data methods are automatically escaped which protects your project from SQL Injection attacks.
 
 ## Getting started
