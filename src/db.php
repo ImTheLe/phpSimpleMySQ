@@ -54,7 +54,7 @@ class DB{
 		}
 
 		$this->db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-		if(isset($options['charset']) && $options['charset']) $this->db->exec('SET CHARACTER SET ' . $options['charset']);
+		if(isset($options['charset']) && !empty($options['charset'])) $this->db->exec('SET CHARACTER SET ' . $options['charset']);
 	}
 
 	function __destruct(){
@@ -69,17 +69,18 @@ class DB{
 		$index = 0;
 		foreach($conditions as $column => $value){
 			if(!is_string($column) && !is_numeric($column) || empty($column)) throw new Exception(20, 19, [$index]);
-			if(!is_string($value) && !is_numeric($value) && !is_null($value) && !is_bool($value)) throw new Exception(20, 20, [$column]);
+			if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Exception(20, 20, [$column]);
 
 			if(is_bool($value)) $value = $value ? 1 : 0;
-
+			$column = $this->escapeName($column);
+			
 			if($query) $query .= ' AND ';
 
 			if(is_null($value)){
-				$query .= '`' . $column . '` IS NULL';
+				$query .= $column . ' IS NULL';
 			}else{
 				$value = $this->db->quote($value);
-				$query .= '`' . $column . '`=' . $value;
+				$query .= $column . '=' . $value;
 			}
 
 			$index++;
@@ -95,6 +96,8 @@ class DB{
 			if(!is_string($additional['order'])) throw new Exception(20, 21);
 			if($additional['order']) $query .= ' ORDER BY ' . $additional['order'];
 		}
+		
+		if(isset($additional['single']) && $additional['single']) $additional['limit'] = 1;
 
 		if(isset($additional['limit'])){
 			if(!is_numeric($additional['limit']) || $additional['limit']<1) throw new Exception(20, 22);
@@ -118,8 +121,9 @@ class DB{
 			$count = count($data[0]);
 			foreach($data[0] as $index => $column){
 				if(!is_string($column) && !is_numeric($column) || empty($column)) throw new Exception(20, 24, [$index]);
+				$data[0][$index] = $this->escapeName($column);
 			}
-			$query = '(`' . implode('`, `', $data[0]) . '`) VALUES ';
+			$query = '(' . implode(', ', $data[0]) . ') VALUES ';
 
 			foreach($data as $id => $row){
 				if($id === 0) continue; // skipping column names
@@ -127,7 +131,7 @@ class DB{
 				if(count($row) != $count) throw new Exception(20, 25, [$id]);
 
 				foreach($row as $column_id => $value){
-					if(!is_string($value) && !is_numeric($value) && !is_null($value) && !is_bool($value)) throw new Exception(20, 26, [$data[0][$column_id]]);
+					if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Exception(20, 26, [$data[0][$column_id]]);
 
 					if(is_bool($value)) $value = $value ? 1 : 0;
 
@@ -143,7 +147,7 @@ class DB{
 			$index = 0;
 			foreach($data as $column => $value){
 				if(!is_string($column) && !is_numeric($column) || empty($column)) throw new Exception(20, 24, [$index]);
-				if(!is_string($value) && !is_numeric($value) && !is_null($value) && !is_bool($value)) throw new Exception(20, 26, [$column]);
+				if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Exception(20, 26, [$column]);
 
 				if(is_bool($value)) $value = $value ? 1 : 0;
 
@@ -151,7 +155,7 @@ class DB{
 				else $value = $this->db->quote($value);
 
 				if($values) $values .= ', ';
-				$values .= '`' . $column . '`=' . $value;
+				$values .= $this->escapeName($column) . '=' . $value;
 
 				$index++;
 			}
@@ -188,7 +192,7 @@ class DB{
 		if(!is_array($conditions) && !is_string($conditions)) throw new Exception(20, 29);
 		if(!is_array($additional)) throw new Exception(20, 30);
 
-		$query = 'SELECT ' . $columns . ' FROM `' . $this->prefix . $table . '`' . $this->conditionsParse($conditions) . $this->additionalParse($additional);
+		$query = 'SELECT ' . $columns . ' FROM ' . $this->escapeName($this->prefix . $table) . $this->conditionsParse($conditions) . $this->additionalParse($additional);
 
 		try{
 			$result = $this->db->query($query);
@@ -202,11 +206,7 @@ class DB{
 			while($data[$id] = $result->fetch(\PDO::FETCH_ASSOC)) $id++;
 			unset($data[$id]);
 
-			if($result->rowCount() === 1 &&
-				isset($additional['single']) && $additional['single'] &&
-				isset($additional['limit']) && $additional['limit'] === 1){
-					$data = $data[0];
-			}
+			if($result->rowCount() === 1 && isset($additional['single']) && $additional['single']) $data = $data[0];
 		}
 
 		$output = [
@@ -221,7 +221,7 @@ class DB{
 		if(!is_string($table)) throw new Exception(20, 27);
 		if(!is_array($data) || empty($data)) throw new Exception(20, 31);
 
-		$query = 'INSERT INTO `' . $this->prefix . $table . '`' . $this->dataParse($data);
+		$query = 'INSERT INTO ' . $this->escapeName($this->prefix . $table) . $this->dataParse($data);
 
 		try{
 			$result = $this->db->query($query);
@@ -243,7 +243,7 @@ class DB{
 		if(!is_array($conditions) && !is_string($conditions)) throw new Exception(20, 29);
 		if(!is_array($additional)) throw new Exception(20, 30);
 
-		$query = 'UPDATE `' . $this->prefix . $table . '`' . $this->dataParse($data, true) . $this->conditionsParse($conditions) . $this->additionalParse($additional);
+		$query = 'UPDATE ' . $this->escapeName($this->prefix . $table) . $this->dataParse($data, true) . $this->conditionsParse($conditions) . $this->additionalParse($additional);
 
 		try{
 			$result = $this->db->query($query);
@@ -261,7 +261,7 @@ class DB{
 		if(!is_array($conditions) && !is_string($conditions)) throw new Exception(20, 29);
 		if(!is_array($additional)) throw new Exception(20, 30);
 
-		$query = 'DELETE FROM `' . $this->prefix . $table . '`' . $this->conditionsParse($conditions) . $this->additionalParse($additional);
+		$query = 'DELETE FROM ' . $this->escapeName($this->prefix . $table) . $this->conditionsParse($conditions) . $this->additionalParse($additional);
 
 		try{
 			$result = $this->db->query($query);
@@ -303,5 +303,9 @@ class DB{
 
 	public function escape($string){
 		return $this->db->quote($string);
+	}
+	
+	public function escapeName($string){
+		return '`' . str_replace('`', '\\`', $string) . '`';
 	}
 }
