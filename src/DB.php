@@ -62,8 +62,8 @@ class DB{
 	}
 
 	private function conditionsParse($conditions){
-		if(is_string($conditions)) return $conditions;
 		if(empty($conditions)) return '';
+		if(is_string($conditions)) return 'WHERE ' . $conditions;
 
 		$query = '';
 		$index = 0;
