@@ -1,22 +1,15 @@
 # php-db-pdo-mysql
-Makes MySQL in PHP as easy as four methods and keeps it secure.
-
-*Notice: out of date since v3.0.0*
-
-All values sent through the four data methods are automatically escaped which protects your project from SQL Injection attacks.
-
 ## Getting started
 ### Using Composer
 Just install `php-db-pdo-mysql` using
 ```
 php composer.phar require leongrdic/db-pdo-mysql
 ```
-The class will autoload.
 
 ### Not using Composer
-You can simply require the `db.php` file from the `src/` folder at the beginning of your script:
+You can simply require the `DB.php` file from the `src/` folder at the beginning of your script:
 ```php
-require_once('db.php');
+require_once('DB.php');
 ```
 
 ### Initialization
@@ -25,96 +18,297 @@ Now you can initialize a DB object and start working with your database like fol
 $options = [
   'host' => 'localhost', 'port' => 3306, 'charset' => 'utf8',
   'database' => 'db', 'prefix' => 'prefix_',
-  'user': '' => 'password': ''
+  'user' => 'username', 'password' => 'password',
+  'return_query' => false
 ];
 $database = new \Le\DB($options);
 ```
 
-## Methods
-### `dataGet($table_name, $columns, $conditions, $additional)`
+If the optional `return_query` key is set to `true`, an additional 'query' key will be added to all method return arrays.
+
+## Object methods
+### `get($table_name, $columns, $conditions, $additional)`
+#### Parameters
 `$table_name` is a string containing the name of the table we're selecting data from. Notice: the prefix will be prepended to the table name if specified
 
-`$columns` is a string containing the names of columns separated by a comma (`,`), or a wildcard (`*`) if you wish to select all columns
+`$columns` can be one of the following:
+-   an array containing the names of columns which will be escaped
+-   a string containing the list of columns separated by a comma (`,`) or just a wildcard (`*`)
 
 `$conditions` specifies the conditions used to search for the rows, refer to the [Conditions format](#conditions-format) section for more info
 
-`$additional:` an array that contains all additions to the query; can contain the following keys:
+`$additional:` an optional array that contains all additions to the query; can contain the following keys:
 -   `'limit'` is an integer that represents how many rows should be fetched; if set to `0` or not defined, there will be no limit
 -   `'offset'` defines how many rows to skip in the result; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
 -   `'order'` is a string specifying the rule the results will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
--   `'single_no_key'` if true and accompanied with `'limit'` set to 1, the single row will not be inside an array with the index of 0; if not set, it defaults to false
+-   `'single'` if set to `true`, the limit will automatically be set to `1` and the column-value pairs will be more easily accessible
 
-### `dataInsert($table_name, $data, $additional)`
+#### Return
+```php
+[
+  'count' => 3,
+  'data' => [
+    [ 'column1' => 'value1', ... ],
+    ...
+  ]
+]
+```
+If `single` additional parameter is set to `true`, the `data` index contains the column-value pairs directly:
+```php
+[
+  'count' => 1,
+  'data' => [
+    'column1' => 'value1',
+    ...
+  ]
+]
+```
+If there is no rows matching the conditions, the return value will always be:
+```php
+[
+  'count' => 0,
+  'data' => []
+]
+```
+
+#### Examples
+```php
+$result = $database->get(
+  'table',
+  ['column1', 'column2'],
+  ['condition' => 'value'],
+  [
+    'limit' => 10,
+    'order' => 'column2 DESC'
+  ]
+);
+$data = $result['data'];
+```
+
+To get the count of rows matching the conditions:
+```php
+$result = $database->get(
+  'table',
+  'COUNT(*)'
+);
+$count = $result['data']['COUNT(*)']
+```
+
+### `insert($table_name, $data)`
+#### Parameters
 `$table_name` is a string containing the name of the table we're inserting data in. Notice: the prefix will be prepended to the table name if specified
 
-`$data` can be an array or a string containing the rows to insert into the table, refer to the [Insert Data format](#insert-data-format) section for more info
+`$data` can be an array or a string containing the rows to insert into the table, refer to the next section for more info
 
-`$additional:` an array that contains all additions to the query; can contain the following keys:
--   `'stacked_values'` is also explained in the [Insert Data format](#insert-data-format) section
+#### Insert data format
+It can be formated in one of the following ways:
 
-### `dataUpdate($table_name, $data, $conditions, $additional)`
+`['first_name' => 'John', 'last_name' => 'Doe']`
+
+`[ ['first_name', 'last_name'], ['Bob', 'Mike'], ['Hills', 'Rotch'] ]`
+
+#### Return
+
+The return will contain the number of inserted columns and the id of the last one inserted (if your database has a primary key).
+
+```php
+[
+  'count' => 1,
+  'id' => 54
+]
+```
+
+#### Examples
+```php
+$result = $database->insert(
+  'table',
+  ['column' => 'value', ...]
+);
+$id = $result['id'];
+```
+
+```php
+$result = $database->insert(
+  'table',
+  [
+    ['column1', 'column2'],
+    ['row1_value1', 'row1_value2'],
+    ['row2_value1', 'row2_value2']
+  ]
+);
+$lastid = $result['id'];
+```
+
+### `update($table_name, $data, $conditions, $additional)`
+#### Parameters
 `$table_name` is a string containing the name of the table we're updating the data in. Notice: the prefix will be prepended to the table name if specified
 
-`$data` is an array containing the data to be updated, e.g.: `['account_balance' => '150']`
+`$data` is an array containing the column-value pairs to be updated, e.g.: `['account_balance' => '150']`
 
 `$conditions` specifies the conditions used to search for the rows, refer to the [Conditions format](#conditions-format) section for more info
 
-`$additional:` an array that contains all additions to the query; can contain the following keys:
+`$additional:` an optional array that contains all additions to the query; can contain the following keys:
 -   `'limit'` is an integer that represents how many rows should be updated; if set to `0` or not defined, there will be no limit
--   `'offset'` defines how many rows to skip in the query; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
--   `'order'` is a string specifying the rule the results will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
+-   `'offset'` defines how many rows to skip; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
+-   `'order'` is a string specifying the rule the rows affected will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
+-   `'single'` if set to `true`, the limit will be set to `1`
 
-### `dataDelete($table_name, $conditions, $additional)`
+#### Return
+```php
+['count' => 1]
+```
+
+#### Examples
+```php
+$result = $database->update(
+  'table',
+  ['condition' => 'value'],
+  ['column' => 'new_value'],
+  ['single' => true]
+);
+$count = $result['count'];
+```
+
+### `delete($table_name, $conditions, $additional)`
+#### Parameters
 `$table_name` is a string containing the name of the table we're deleting data from. Notice: the prefix will be prepended to the table name if specified
 
 `$conditions` specifies the conditions used to search for the rows, refer to the [Conditions format](#conditions-format) section for more info
 
-`$additional:` an array that contains all additions to the query; can contain the following keys:
+`$additional:` an optional array that contains all additions to the query; can contain the following keys:
 -   `'limit'` is an integer that represents how many rows should be deleted; if set to `0` or not defined, there will be no limit
--   `'offset'` defines how many rows to skip in the query; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
--   `'order'` is a string specifying the rule the results will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
+-   `'offset'` defines how many rows to skip; if not set, defaults to 0. Notice: it can only be used if the `'limit'` is also set
+-   `'order'` is a string specifying the rule the rows will be sorted by; refer to the [MySQL ORDER manual](http://dev.mysql.com/doc/refman/5.7/en/sorting-rows.html) for more info
+-   `'single'` if set to `true`, the limit will be set to `1`
 
-### `escape($data)`
-It returns a string escaped with single quotes (`'`) and ready for passing into the `$conditions` parameter.
+#### Return
+```php
+['count' => 1]
+```
 
-`$data` is the string you would like to escape and make it ready for the query
+#### Examples
+```php
+$result = $database->delete(
+  'table',
+  ['condition' => 'value']
+);
+$count = $result['count'];
+```
 
-## Parameter formats
-### Conditions format
-It can be an array formatted like this: `['first_name' => 'John', 'last_name' => 'Doe']`
+### `schema($table_name)`
+Get the column names for a table.
 
-Notice: all conditions specified through the array are connected with an AND constructor; you can make a NOT constructor by adding a bang (`!`) at the end of the column name
+#### Parameters
+`$table_name` is a string containing the name of the table we're fetching the schema of. Notice: the prefix will be prepended to the table name if specified
+
+#### Return
+```php
+[
+  'count' => 2,
+  'data' => [
+    [
+      "Field" => "column1",
+      "Type" => "varchar(32)",
+      "Null" => "YES",
+      "Key" => "",
+      "Default" => "",
+      "Extra" => ""
+    ],
+    [
+      "Field" => "column2",
+      "Type" => "int(10)",
+      "Null" => "NO",
+      "Key" => "PRI",
+      "Default" => "",
+      "Extra" => ""
+    ]
+  ]
+]
+```
+
+#### Examples
+```php
+$result = $database->schema('table');
+$columns = $result['data'];
+```
+
+### `escape($string)`
+It returns a string escaped with single quotes (`'`) and ready to be passed into the `$conditions` parameter.
+
+#### Parameters
+`$string` is the string you would like to escape and make it ready for the query
+
+#### Example
+```php
+$conditions = 'column != ' . $database->escape($value);
+```
+
+### `escapeName($string)`
+It returns a string escaped with backticks (`` ` ``) and ready for passing into the query making it suitable for escaping column or table names.
+
+#### Parameters
+
+`$string` is the column/table name string you would like to escape and make it ready for the query
+
+#### Example
+```php
+$conditions = $database->escapeName($column) . " != 'value'";
+```
+
+### `transactionBegin()`
+
+Begins the MySQL transaction, and any data further written will not be written into the database unless committed.
+
+If a transaction is already started, this method increases the internal counter of concurrent transactions.
+
+### `commit()`
+
+If a transaction is active, commit the changes and returns `true`.
+If transaction isn't active, returns `false`.
+
+If the method `transactionBegin()` has been called multiple times, the `commit()` method won't actually commit the MySQL transaction until it's called as many times as the former method.
+
+### `rollback()`
+
+If a transaction is active, discard the changes and returns `true`.
+If transaction isn't active, returns `false`.
+
+No matter how many times `transactionBegin()` was called, this method discards the MySQL transaction and resets the internal transaction counter to 0.
+
+## Conditions format
+The conditions parameter is optional and can either be an array or a string.
+
+### Array
+In the case of an array, it has to be formatted like: `['first_name' => 'John', 'last_name' => 'Doe']`
+
+Notice: all conditions specified through the array are connected with an AND constructor
+
+### String
 
 If you want to use other logical constructors, the conditions can be provided as a string in the following format: `first_name='John' AND last_name='Doe'`.
 
-Notice: do not forget to manually escape the user input (with the `escape()` method) when constructing this string.
+Notice: do not forget to manually escape the user input (with the `escape()` and `escapeName()` methods) when constructing this string.
 
-### Insert Data Format
-This is an array and it can be formated in one of the following ways:
+## Error handling & debugging
 
-`['first_name' => 'John', 'last_name' => 'Doe']`
-
-Notice: you can use this formatting type only if you are inserting a single row
-
-`[['first_name' => 'Bob', 'last_name' => 'Hills'], ['first_name' => 'Mike', 'last_name' => 'Rotch']]`
-
-`['first_name' => ['Bob', 'Mike'], 'last_name' => ['Hills', 'Rotch']]`
-
-Notice: if you are using the last format type, the `'stacked_values'` element of the `$additional` parameter has to be `true`, because the values are stacked under the same key name
-
-## Output
-The [Methods](#methods) return an array that consists of the following elements:
--   `query` the query sent to the server
--   `success` a boolean stating if the result was successful
--   `error` defined in case of an error; has three elements: `code`, `message` and `trace`
--   `count` the number of the rows affected by the query
--   `id` row ID of the last inserted row; only for the `dataInsert()` method
--   `data` is an array of rows returned by the query for `dataGet()` method; if `'single_no_key'` was used, there is no nesting
-
-## Example
+Debugging can help you determine mistakes in your code that utilizes `php-db-pdo-mysql` like invalid parameter formats or wrong data types.
+To enable debugging, set the static variable `$debug` of the class to `true`:
 ```php
-$result = $database->dataGet('table', 'column1, column2', ['shown' => true], ['limit' => 10]);
-print_r($result);
+\Le\DB::$debug = true;
+```
+
+When debugging is turned on, the methods can throw `Error`s containing information about what went wrong. Also, the `return_query` will automati be set to `true` on any new instances of the object.
+
+Besides the debugging errors, `php-db-pdo-mysql` throws no exceptions on its own. Any database errors or query errors are thrown as exceptions by PDO.
+
+To ensure your actions were finished successfully use a `try-catch` block around the main methods and the constructor:
+```php
+try {
+  $result = $database->get('missingtable', '*');
+}
+catch(Throwable $e){
+  echo 'database error occurred';
+}
 ```
 
 ## Disclaimer
