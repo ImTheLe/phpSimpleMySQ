@@ -4,129 +4,6 @@
 final class DB{
 	public static $debug = false;
 
-	private static function parseColumns($columns){
-		if(empty($columns)) return '';
-		if(is_string($columns)) return $columns;
-
-		foreach($columns as $index => $column){
-			if(self::$debug && (!is_string($column) && !is_numeric($column) || empty($column))) throw new Error("DEBUG: invalid column name with index " . $index);
-			$columns[$index] = $this->escapeName($column);
-		}
-
-		$query = implode(', ', $columns);
-		return $query;
-	}
-
-	private static function parseConditions($conditions){
-		if(empty($conditions)) return '';
-		if(is_string($conditions)) return ' WHERE ' . $conditions;
-
-		$query = '';
-		$index = 0;
-		foreach($conditions as $column => $value){
-			if(self::$debug){
-				if(!is_string($column) && !is_numeric($column) || empty($column)) throw new Error("DEBUG: invalid column name with index " . $index);
-				if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Error("DEBUG: invalid value for column " . $column);
-			}
-
-			if(is_bool($value)) $value = $value ? 1 : 0;
-			$column = $this->escapeName($column);
-
-			if($query) $query .= ' AND ';
-
-			if(is_null($value)){
-				$query .= $column . ' IS NULL';
-			}else{
-				$value = $this->db->quote($value);
-				$query .= $column . '=' . $value;
-			}
-
-			$index++;
-		}
-
-		return ' WHERE ' . $query;
-	}
-
-	private static function parseAdditional($additional){
-		$query = '';
-
-		if(isset($additional['order'])){
-			if(self::$debug && !is_string($additional['order'])) throw new Error("DEBUG: invalid additional order");
-			if($additional['order']) $query .= ' ORDER BY ' . $additional['order'];
-		}
-
-		if(isset($additional['single']) && $additional['single']) $additional['limit'] = 1;
-
-		if(isset($additional['limit'])){
-			if(self::$debug && (!is_numeric($additional['limit']) || $additional['limit']<1)) throw new Error("DEBUG: invalid additional limit");
-			$query .= ' LIMIT ' . $additional['limit'];
-
-			if(isset($additional['offset'])){
-				if(self::$debug && (!is_numeric($additional['offset']) || $additional['offset']<0)) throw new Error("DEBUG: invalid additional offset");
-				$query .= ' OFFSET ' . $additional['offset'];
-			}
-		}
-
-		return $query;
-	}
-
-	private static function parseData($data, $single_row = false){
-		$query = '';
-		$values = '';
-
-		// $single_row is true for update method to make sure the SET syntax is used
-		if(isset($data[0]) && is_array($data[0]) && !$single_row){ // format: 0 => [column names], 1 => [row values], 2 => ...
-			$count = count($data[0]);
-			foreach($data[0] as $index => $column){
-				if(self::$debug && (!is_string($column) && !is_numeric($column) || empty($column))) throw new Error("DEBUG: invalid column name with index " . $index);
-				$data[0][$index] = $this->escapeName($column);
-			}
-			$query = '(' . implode(', ', $data[0]) . ') VALUES ';
-
-			foreach($data as $id => $row){
-				if($id === 0) continue; // skipping column names
-
-				if(count($row) != $count) throw new Error("DEBUG: value count doesn't match column count on id " . $id);
-
-				foreach($row as $column_id => $value){
-					if(self::$debug && !is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Error("DEBUG: invalid value for column " . $data[0][$column_id]);
-
-					if(is_bool($value)) $value = $value ? 1 : 0;
-
-					if(is_null($value)) $row[$column_id] = 'NULL';
-					else $row[$column_id] = $this->db->quote($value);
-				}
-
-				if($values) $values .= ', ';
-				$values .= '(' . implode(', ', $row) . ')';
-			}
-		}else{ // format: 'column1' => 'value1', 'column2' => 'value2', ...
-			$query = ' SET ';
-			$index = 0;
-			foreach($data as $column => $value){
-				if(self::$debug){
-					if(!is_string($column) && !is_numeric($column) || empty($column)) throw new Error("DEBUG: invalid column with index " . $index);
-					if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Error("DEBUG: invalid value for column " . $column);
-				}
-
-				if(is_bool($value)) $value = $value ? 1 : 0;
-
-				if(is_null($value)) $value = 'NULL';
-				else $value = $this->db->quote($value);
-
-				if($values) $values .= ', ';
-				$values .= $this->escapeName($column) . '=' . $value;
-
-				$index++;
-			}
-		}
-
-		$query .= $values;
-		return $query;
-	}
-
-	// OBJECT
-
 	private $db, $prefix, $return_query, $transaction = 0;
 
 	function __construct($argoptions = []){
@@ -188,7 +65,7 @@ final class DB{
 			if(!is_array($additional)) throw new Error("DEBUG: invalid additional");
 		}
 
-		$query = 'SELECT ' . self::parseColumns($columns) . ' FROM ' . $this->escapeName($this->prefix . $table) . self::parseConditions($conditions) . self::parseAdditional($additional);
+		$query = 'SELECT ' . $this->parseColumns($columns) . ' FROM ' . $this->escapeName($this->prefix . $table) . $this->parseConditions($conditions) . $this->parseAdditional($additional);
 		$result = $this->db->query($query);
 
 		$data = [];
@@ -214,7 +91,7 @@ final class DB{
 			if(!is_array($data) || empty($data)) throw new Error("DEBUG: invalid data");
 		}
 
-		$query = 'INSERT INTO ' . $this->escapeName($this->prefix . $table) . self::parseData($data);
+		$query = 'INSERT INTO ' . $this->escapeName($this->prefix . $table) . $this->parseData($data);
 		$result = $this->db->query($query);
 
 		$output = [
@@ -233,7 +110,7 @@ final class DB{
 			if(!is_array($additional)) throw new Error("DEBUG: invalid additional");
 		}
 
-		$query = 'UPDATE ' . $this->escapeName($this->prefix . $table) . self::parseData($data, true) . self::parseConditions($conditions) . self::parseAdditional($additional);
+		$query = 'UPDATE ' . $this->escapeName($this->prefix . $table) . $this->parseData($data, true) . $this->parseConditions($conditions) . $this->parseAdditional($additional);
 		$result = $this->db->query($query);
 
 		$output = ['count' => $result->rowCount()];
@@ -248,7 +125,7 @@ final class DB{
 			if(!is_array($additional)) throw new Error("DEBUG: additional");
 		}
 
-		$query = 'DELETE FROM ' . $this->escapeName($this->prefix . $table) . self::parseConditions($conditions) . self::parseAdditional($additional);
+		$query = 'DELETE FROM ' . $this->escapeName($this->prefix . $table) . $this->parseConditions($conditions) . $this->parseAdditional($additional);
 		$result = $this->db->query($query);
 
 		$output = ['count' => $result->rowCount()];
@@ -283,5 +160,126 @@ final class DB{
 		$this->transaction = 0;
 
 		return true;
+	}
+
+	private function parseColumns($columns){
+		if(empty($columns)) return '';
+		if(is_string($columns)) return $columns;
+
+		foreach($columns as $index => $column){
+			if(self::$debug && (!is_string($column) && !is_numeric($column) || empty($column))) throw new Error("DEBUG: invalid column name with index " . $index);
+			$columns[$index] = $this->escapeName($column);
+		}
+
+		$query = implode(', ', $columns);
+		return $query;
+	}
+
+	private function parseConditions($conditions){
+		if(empty($conditions)) return '';
+		if(is_string($conditions)) return ' WHERE ' . $conditions;
+
+		$query = '';
+		$index = 0;
+		foreach($conditions as $column => $value){
+			if(self::$debug){
+				if(!is_string($column) && !is_numeric($column) || empty($column)) throw new Error("DEBUG: invalid column name with index " . $index);
+				if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Error("DEBUG: invalid value for column " . $column);
+			}
+
+			if(is_bool($value)) $value = $value ? 1 : 0;
+			$column = $this->escapeName($column);
+
+			if($query) $query .= ' AND ';
+
+			if(is_null($value)){
+				$query .= $column . ' IS NULL';
+			}else{
+				$value = $this->db->quote($value);
+				$query .= $column . '=' . $value;
+			}
+
+			$index++;
+		}
+
+		return ' WHERE ' . $query;
+	}
+
+	private function parseAdditional($additional){
+		$query = '';
+
+		if(isset($additional['order'])){
+			if(self::$debug && !is_string($additional['order'])) throw new Error("DEBUG: invalid additional order");
+			if($additional['order']) $query .= ' ORDER BY ' . $additional['order'];
+		}
+
+		if(isset($additional['single']) && $additional['single']) $additional['limit'] = 1;
+
+		if(isset($additional['limit'])){
+			if(self::$debug && (!is_numeric($additional['limit']) || $additional['limit']<1)) throw new Error("DEBUG: invalid additional limit");
+			$query .= ' LIMIT ' . $additional['limit'];
+
+			if(isset($additional['offset'])){
+				if(self::$debug && (!is_numeric($additional['offset']) || $additional['offset']<0)) throw new Error("DEBUG: invalid additional offset");
+				$query .= ' OFFSET ' . $additional['offset'];
+			}
+		}
+
+		return $query;
+	}
+
+	private function parseData($data, $single_row = false){
+		$query = '';
+		$values = '';
+
+		// $single_row is true for update method to make sure the SET syntax is used
+		if(isset($data[0]) && is_array($data[0]) && !$single_row){ // format: 0 => [column names], 1 => [row values], 2 => ...
+			$count = count($data[0]);
+			foreach($data[0] as $index => $column){
+				if(self::$debug && (!is_string($column) && !is_numeric($column) || empty($column))) throw new Error("DEBUG: invalid column name with index " . $index);
+				$data[0][$index] = $this->escapeName($column);
+			}
+			$query = '(' . implode(', ', $data[0]) . ') VALUES ';
+
+			foreach($data as $id => $row){
+				if($id === 0) continue; // skipping column names
+
+				if(count($row) != $count) throw new Error("DEBUG: value count doesn't match column count on id " . $id);
+
+				foreach($row as $column_id => $value){
+					if(self::$debug && !is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Error("DEBUG: invalid value for column " . $data[0][$column_id]);
+
+					if(is_bool($value)) $value = $value ? 1 : 0;
+
+					if(is_null($value)) $row[$column_id] = 'NULL';
+					else $row[$column_id] = $this->db->quote($value);
+				}
+
+				if($values) $values .= ', ';
+				$values .= '(' . implode(', ', $row) . ')';
+			}
+		}else{ // format: 'column1' => 'value1', 'column2' => 'value2', ...
+			$query = ' SET ';
+			$index = 0;
+			foreach($data as $column => $value){
+				if(self::$debug){
+					if(!is_string($column) && !is_numeric($column) || empty($column)) throw new Error("DEBUG: invalid column with index " . $index);
+					if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Error("DEBUG: invalid value for column " . $column);
+				}
+
+				if(is_bool($value)) $value = $value ? 1 : 0;
+
+				if(is_null($value)) $value = 'NULL';
+				else $value = $this->db->quote($value);
+
+				if($values) $values .= ', ';
+				$values .= $this->escapeName($column) . '=' . $value;
+
+				$index++;
+			}
+		}
+
+		$query .= $values;
+		return $query;
 	}
 }
