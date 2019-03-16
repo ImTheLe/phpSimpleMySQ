@@ -11,14 +11,14 @@ final class DB{
 		$options = array_replace($options, $argoptions);
 
 		if(self::$debug){
-			if(!is_string($options['host']) || empty($options['host'])) throw new Error("DEBUG: invalid host");
-			if(!is_numeric($options['port']) || $options['port'] < 1) throw new Error("DEBUG: invalid port");
-			if(!is_string($options['database']) || empty($options['database'])) throw new Error("DEBUG: invalid db name");
-			if(!is_string($options['user'])) throw new Error("DEBUG: invalid username");
-			if(!is_string($options['password'])) throw new Error("DEBUG: invalid password");
+			if(!is_string($options['host']) || empty($options['host'])) throw new \Error("DEBUG: invalid host");
+			if(!is_numeric($options['port']) || $options['port'] < 1) throw new \Error("DEBUG: invalid port");
+			if(!is_string($options['database']) || empty($options['database'])) throw new \Error("DEBUG: invalid db name");
+			if(!is_string($options['user'])) throw new \Error("DEBUG: invalid username");
+			if(!is_string($options['password'])) throw new \Error("DEBUG: invalid password");
 
-			if(isset($options['prefix']) && (!is_string($options['prefix']) || empty($options['prefix']))) throw new Error("DEBUG: invalid table prefix");
-			if(isset($options['charset']) && (!is_string($options['charset']) || empty($options['charset']))) throw new Error("DEBUG: invalid charset");
+			if(isset($options['prefix']) && (!is_string($options['prefix']) || empty($options['prefix']))) throw new \Error("DEBUG: invalid table prefix");
+			if(isset($options['charset']) && (!is_string($options['charset']) || empty($options['charset']))) throw new \Error("DEBUG: invalid charset");
 		}
 
 		$this->return_query = $options['return_query'];
@@ -59,10 +59,10 @@ final class DB{
 
 	public function get($table, $columns = '*', $conditions = [], $additional = []){
 		if(self::$debug){
-			if(!is_string($table)) throw new Error("DEBUG: invalid table");
-			if(!is_array($conditions) && !is_string($conditions)) throw new Error("DEBUG: invalid columns");
-			if(!is_array($conditions) && !is_string($conditions)) throw new Error("DEBUG: invalid conditions");
-			if(!is_array($additional)) throw new Error("DEBUG: invalid additional");
+			if(!is_string($table)) throw new \Error("DEBUG: invalid table");
+			if(!is_array($conditions) && !is_string($conditions)) throw new \Error("DEBUG: invalid columns");
+			if(!is_array($conditions) && !is_string($conditions)) throw new \Error("DEBUG: invalid conditions");
+			if(!is_array($additional)) throw new \Error("DEBUG: invalid additional");
 		}
 
 		$query = 'SELECT ' . $this->parseColumns($columns) . ' FROM ' . $this->escapeName($this->prefix . $table) . $this->parseConditions($conditions) . $this->parseAdditional($additional);
@@ -87,8 +87,8 @@ final class DB{
 
 	public function insert($table, $data){
 		if(self::$debug){
-			if(!is_string($table)) throw new Error("DEBUG: invalid table");
-			if(!is_array($data) || empty($data)) throw new Error("DEBUG: invalid data");
+			if(!is_string($table)) throw new \Error("DEBUG: invalid table");
+			if(!is_array($data) || empty($data)) throw new \Error("DEBUG: invalid data");
 		}
 
 		$query = 'INSERT INTO ' . $this->escapeName($this->prefix . $table) . $this->parseData($data);
@@ -104,10 +104,10 @@ final class DB{
 
 	public function update($table, $data, $conditions = [], $additional = []){
 		if(self::$debug){
-			if(!is_string($table)) throw new Error("DEBUG: invalid table");
-			if(!is_array($data) || empty($data)) throw new Error("DEBUG: invalid data");
-			if(!is_array($conditions) && !is_string($conditions)) throw new Error("DEBUG: invalid conditions");
-			if(!is_array($additional)) throw new Error("DEBUG: invalid additional");
+			if(!is_string($table)) throw new \Error("DEBUG: invalid table");
+			if(!is_array($data) || empty($data)) throw new \Error("DEBUG: invalid data");
+			if(!is_array($conditions) && !is_string($conditions)) throw new \Error("DEBUG: invalid conditions");
+			if(!is_array($additional)) throw new \Error("DEBUG: invalid additional");
 		}
 
 		$query = 'UPDATE ' . $this->escapeName($this->prefix . $table) . $this->parseData($data, true) . $this->parseConditions($conditions) . $this->parseAdditional($additional);
@@ -120,9 +120,9 @@ final class DB{
 
 	public function delete($table, $conditions = [], $additional = []){
 		if(self::$debug){
-			if(!is_string($table)) throw new Error("DEBUG: invalid table");
-			if(!is_array($conditions) && !is_string($conditions)) throw new Error("DEBUG: invalid conditions");
-			if(!is_array($additional)) throw new Error("DEBUG: additional");
+			if(!is_string($table)) throw new \Error("DEBUG: invalid table");
+			if(!is_array($conditions) && !is_string($conditions)) throw new \Error("DEBUG: invalid conditions");
+			if(!is_array($additional)) throw new \Error("DEBUG: additional");
 		}
 
 		$query = 'DELETE FROM ' . $this->escapeName($this->prefix . $table) . $this->parseConditions($conditions) . $this->parseAdditional($additional);
@@ -167,7 +167,7 @@ final class DB{
 		if(is_string($columns)) return $columns;
 
 		foreach($columns as $index => $column){
-			if(self::$debug && (!is_string($column) && !is_numeric($column) || empty($column))) throw new Error("DEBUG: invalid column name with index " . $index);
+			if(self::$debug && (!is_string($column) && !is_numeric($column) || empty($column))) throw new \Error("DEBUG: invalid column name with index " . $index);
 			$columns[$index] = $this->escapeName($column);
 		}
 
@@ -183,8 +183,8 @@ final class DB{
 		$index = 0;
 		foreach($conditions as $column => $value){
 			if(self::$debug){
-				if(!is_string($column) && !is_numeric($column) || empty($column)) throw new Error("DEBUG: invalid column name with index " . $index);
-				if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Error("DEBUG: invalid value for column " . $column);
+				if(!is_string($column) && !is_numeric($column) || empty($column)) throw new \Error("DEBUG: invalid column name with index " . $index);
+				if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new \Error("DEBUG: invalid value for column " . $column);
 			}
 
 			if(is_bool($value)) $value = $value ? 1 : 0;
@@ -209,18 +209,18 @@ final class DB{
 		$query = '';
 
 		if(isset($additional['order'])){
-			if(self::$debug && !is_string($additional['order'])) throw new Error("DEBUG: invalid additional order");
+			if(self::$debug && !is_string($additional['order'])) throw new \Error("DEBUG: invalid additional order");
 			if($additional['order']) $query .= ' ORDER BY ' . $additional['order'];
 		}
 
 		if(isset($additional['single']) && $additional['single']) $additional['limit'] = 1;
 
 		if(isset($additional['limit'])){
-			if(self::$debug && (!is_numeric($additional['limit']) || $additional['limit']<1)) throw new Error("DEBUG: invalid additional limit");
+			if(self::$debug && (!is_numeric($additional['limit']) || $additional['limit']<1)) throw new \Error("DEBUG: invalid additional limit");
 			$query .= ' LIMIT ' . $additional['limit'];
 
 			if(isset($additional['offset'])){
-				if(self::$debug && (!is_numeric($additional['offset']) || $additional['offset']<0)) throw new Error("DEBUG: invalid additional offset");
+				if(self::$debug && (!is_numeric($additional['offset']) || $additional['offset']<0)) throw new \Error("DEBUG: invalid additional offset");
 				$query .= ' OFFSET ' . $additional['offset'];
 			}
 		}
@@ -236,7 +236,7 @@ final class DB{
 		if(isset($data[0]) && is_array($data[0]) && !$single_row){ // format: 0 => [column names], 1 => [row values], 2 => ...
 			$count = count($data[0]);
 			foreach($data[0] as $index => $column){
-				if(self::$debug && (!is_string($column) && !is_numeric($column) || empty($column))) throw new Error("DEBUG: invalid column name with index " . $index);
+				if(self::$debug && (!is_string($column) && !is_numeric($column) || empty($column))) throw new \Error("DEBUG: invalid column name with index " . $index);
 				$data[0][$index] = $this->escapeName($column);
 			}
 			$query = '(' . implode(', ', $data[0]) . ') VALUES ';
@@ -244,10 +244,10 @@ final class DB{
 			foreach($data as $id => $row){
 				if($id === 0) continue; // skipping column names
 
-				if(count($row) != $count) throw new Error("DEBUG: value count doesn't match column count on id " . $id);
+				if(count($row) != $count) throw new \Error("DEBUG: value count doesn't match column count on id " . $id);
 
 				foreach($row as $column_id => $value){
-					if(self::$debug && !is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Error("DEBUG: invalid value for column " . $data[0][$column_id]);
+					if(self::$debug && !is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new \Error("DEBUG: invalid value for column " . $data[0][$column_id]);
 
 					if(is_bool($value)) $value = $value ? 1 : 0;
 
@@ -263,8 +263,8 @@ final class DB{
 			$index = 0;
 			foreach($data as $column => $value){
 				if(self::$debug){
-					if(!is_string($column) && !is_numeric($column) || empty($column)) throw new Error("DEBUG: invalid column with index " . $index);
-					if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new Error("DEBUG: invalid value for column " . $column);
+					if(!is_string($column) && !is_numeric($column) || empty($column)) throw new \Error("DEBUG: invalid column with index " . $index);
+					if(!is_string($value) && !is_numeric($value) && !is_bool($value) && !is_null($value)) throw new \Error("DEBUG: invalid value for column " . $column);
 				}
 
 				if(is_bool($value)) $value = $value ? 1 : 0;
