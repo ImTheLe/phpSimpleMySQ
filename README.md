@@ -162,8 +162,8 @@ $lastid = $result['id'];
 ```php
 $result = $database->update(
   'table',
-  ['condition' => 'value'],
   ['column' => 'new_value'],
+  ['condition' => 'value'],
   ['single' => true]
 );
 $count = $result['count'];
